@@ -1,0 +1,46 @@
+name: pulse
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  clickhouse:
+    image: yandex/clickhouse-server:latest
+    volumes:
+      - ./scripts/init-clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+
+  agent:
+    build: .
+    command: ["./agent"]
+    env_file: .env
+    depends_on:
+      - kafka
+
+  collector:
+    build: .
+    command: ["./collector"]
+    env_file: .env
+    depends_on:
+      - kafka
+      - clickhouse
+    ports:
+      - "8081:8081"
+
