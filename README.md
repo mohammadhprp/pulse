@@ -109,6 +109,18 @@ Configure the application using environment variables (see `.env.example`):
 - `CLICKHOUSE_DB`: ClickHouse database name (default: gologcentral)
 - `CLICKHOUSE_USER`: ClickHouse username (default: default)
 - `CLICKHOUSE_PASS`: ClickHouse password
+- `LOG_LEVEL`: Logging verbosity (options: debug, info, warn, error, default: info)
+
+## Logging
+
+Pulse uses structured JSON logging powered by Zap. This provides:
+
+- High-performance logging with minimal allocations
+- Structured JSON output for easy parsing by log aggregation tools
+- Different log levels (debug, info, warn, error) configurable via environment variables
+- Context-rich logs with consistent fields across components
+
+You can control the verbosity of logging using the `LOG_LEVEL` environment variable.
 
 ## License
 
