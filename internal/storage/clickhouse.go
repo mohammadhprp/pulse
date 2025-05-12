@@ -38,33 +38,32 @@ func Connect(ctx context.Context) (clickhouse.Conn, error) {
 
 // InsertEvent inserts a single event into ClickHouse
 func InsertEvent(ctx context.Context, conn clickhouse.Conn, e models.Event) error {
-	// Fixed query to match schema - Timestamp is materialized so we don't need to include it
 	query := "INSERT INTO gologcentral.logs (EventTimeMs, Service, Level, Message, Host, RequestID)"
-	
+
 	batch, err := conn.PrepareBatch(ctx, query)
 	if err != nil {
 		logger.Error("Failed to prepare batch", zap.Error(err))
 		return err
 	}
-	
+
 	if err := batch.Append(e.EventTimeMs, e.Service, e.Level, e.Message, e.Host, e.RequestID); err != nil {
-		logger.Error("Failed to append to batch", 
+		logger.Error("Failed to append to batch",
 			zap.Error(err),
 			zap.String("service", e.Service),
 			zap.Uint64("timestamp", e.EventTimeMs))
 		return err
 	}
-	
+
 	start := time.Now()
 	if err := batch.Send(); err != nil {
 		logger.Error("Failed to send batch", zap.Error(err))
 		return err
 	}
-	
+
 	logger.Debug("Event inserted successfully",
 		zap.Duration("took", time.Since(start)),
 		zap.String("service", e.Service),
 		zap.String("level", e.Level))
-		
+
 	return nil
 }

@@ -30,12 +30,12 @@ func main() {
 
 	logger.Info("Collector starting", zap.String("logLevel", logLevel))
 
-	// Verify required configuration 
+	// Verify required configuration
 	if viper.GetString("KAFKA_BROKER") == "" {
 		logger.Fatal("KAFKA_BROKER is not set")
 	}
 	if viper.GetString("KAFKA_TOPIC") == "" {
-		logger.Fatal("KAFKA_TOPIC is not set") 
+		logger.Fatal("KAFKA_TOPIC is not set")
 	}
 	if viper.GetString("CLICKHOUSE_ADDR") == "" {
 		logger.Fatal("CLICKHOUSE_ADDR is not set")
@@ -45,11 +45,11 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	logger.Info("Collector started", 
+	logger.Info("Collector started",
 		zap.String("broker", viper.GetString("KAFKA_BROKER")),
 		zap.String("topic", viper.GetString("KAFKA_TOPIC")),
 		zap.String("clickhouse", viper.GetString("CLICKHOUSE_ADDR")))
-	
+
 	go collector.Run()
 
 	// Wait for shutdown signal

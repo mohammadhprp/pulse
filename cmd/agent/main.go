@@ -59,7 +59,7 @@ func main() {
 	// Handle graceful shutdown
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	go func() {
 		sig := <-signals
 		logger.Info("Shutdown signal received", zap.String("signal", sig.String()))
