@@ -23,7 +23,7 @@ restart: ## Restart containers (stop + start)
 	@$(MAKE) start
 
 logs: ## Tail container logs (add ctrl+c to stop)
-	@docker compose logs -f app
+	@docker compose logs -f agent collector
 
 clean: ## Stop containers and remove volumes, images
 	@docker compose down -v --rmi all
