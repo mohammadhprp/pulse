@@ -6,7 +6,7 @@ Pulse is a distributed log collection and storage system that uses Kafka for mes
 
 The system consists of two main components:
 
-1. **Agent**: Collects logs from standard input and sends them to a Kafka topic.
+1. **Agent**: Collects logs via HTTP API endpoints and sends them to a Kafka topic.
 2. **Collector**: Consumes logs from Kafka and stores them in ClickHouse.
 
 ## Prerequisites
@@ -32,7 +32,24 @@ The system consists of two main components:
 
 ### Agent
 
-The agent component reads JSON-formatted log events from stdin, parses them into the Event model, and produces messages to Kafka. This makes it easy to pipe logs from any application into the Pulse system.
+The agent component receives JSON-formatted log events via HTTP endpoints, processes them into the Event model, and produces messages to Kafka. The agent uses a flexible transport layer that currently supports HTTP and is designed for easy extension to other protocols like gRPC.
+
+#### Sending Events to Agent
+
+You can send events to the agent using HTTP:
+
+```bash
+curl -X POST http://localhost:8080/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_time_ms": 1651234567890,
+    "service": "my-service",
+    "level": "INFO",
+    "message": "User logged in",
+    "host": "server-1",
+    "request_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
 
 ### Collector
 
@@ -81,7 +98,9 @@ Log events should be in JSON format with the following structure:
 │   ├── collector/   # Collector specific code
 │   └── storage/     # Storage layer (ClickHouse)
 ├── pkg/
-│   └── models/      # Shared data models
+│   ├── logger/      # Logging utilities
+│   ├── models/      # Shared data models
+│   └── transport/   # Transport layer (HTTP, gRPC)
 └── scripts/
     ├── entrypoint.sh       # Container entrypoint script
     └── init-clickhouse.sql # ClickHouse initialization script
@@ -110,6 +129,15 @@ Configure the application using environment variables (see `.env.example`):
 - `CLICKHOUSE_USER`: ClickHouse username (default: default)
 - `CLICKHOUSE_PASS`: ClickHouse password
 - `LOG_LEVEL`: Logging verbosity (options: debug, info, warn, error, default: info)
+- `HTTP_PORT`: Port for HTTP transport (default: 8080)
+- `HTTP_ENDPOINT`: Endpoint path for receiving events (default: /events)
+
+## Transport Layer
+
+Pulse uses a pluggable transport layer architecture that allows for multiple protocols to receive events:
+
+- **HTTP Transport**: Currently implemented, accepts POST requests with JSON event data
+- **gRPC Transport**: Planned for future implementation
 
 ## Logging
 
