@@ -46,8 +46,7 @@ curl -X POST http://localhost:8080/events \
     "service": "my-service",
     "level": "INFO",
     "message": "User logged in",
-    "host": "server-1",
-    "request_id": "550e8400-e29b-41d4-a716-446655440000"
+    "host": "server-1"
   }'
 ```
 

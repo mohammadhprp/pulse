@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/mohammadhptp/pulse/pkg/logger"
 	"github.com/mohammadhptp/pulse/pkg/models"
 	"go.uber.org/zap"
@@ -99,6 +100,7 @@ func (h *HTTPTransport) handleEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var event models.Event
+	event.RequestID = uuid.New().String()
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
 		logger.Warn("Failed to parse event", zap.Error(err))
 		http.Error(w, "Bad request: "+err.Error(), http.StatusBadRequest)
