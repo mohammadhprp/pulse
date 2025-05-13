@@ -31,7 +31,6 @@ services:
       retries: 3
 
   clickhouse:
-    # Updated from outdated yandex image to official image
     image: clickhouse/clickhouse-server:latest
     volumes:
       - ./scripts/init-clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
