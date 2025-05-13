@@ -54,6 +54,42 @@ curl -X POST http://localhost:8080/events \
 
 The collector consumes log events from Kafka and stores them in ClickHouse for efficient querying and analysis.
 
+#### Querying Logs
+
+You can query and filter logs using the HTTP API:
+
+```bash
+curl -X GET "http://localhost:8080/query?service=my-service&level=INFO&limit=50&offset=0&start_time=1651234567890&end_time=1651334567890&search=logged%20in&sort_order=DESC"
+```
+
+Available query parameters:
+
+- `service`: Filter by service name
+- `level`: Filter by log level (DEBUG, INFO, WARN, ERROR)
+- `host`: Filter by hostname
+- `request_id`: Filter by request ID
+- `search`: Search for text in the message field
+- `limit`: Maximum number of results to return (default: 100)
+- `offset`: Results offset for pagination
+- `start_time`: Filter events after this timestamp
+- `end_time`: Filter events before this timestamp
+- `sort_order`: Results order (ASC or DESC, default: ASC)
+
+The response is a JSON array of log events:
+
+```json
+[
+  {
+    "event_time_ms": 1651234567890,
+    "service": "my-service",
+    "level": "INFO",
+    "message": "User logged in",
+    "host": "server-1",
+    "request_id": "550e8400-e29b-41d4-a716-446655440000"
+  }
+]
+```
+
 ### Storage
 
 Logs are stored in ClickHouse with a TTL of 30 days. The schema includes:
@@ -67,21 +103,6 @@ Logs are stored in ClickHouse with a TTL of 30 days. The schema includes:
 - RequestID (UUID)
 
 The data is partitioned by day for optimal query performance.
-
-## Event Format
-
-Log events should be in JSON format with the following structure:
-
-```json
-{
-  "event_time_ms": 1651234567890,
-  "service": "my-service",
-  "level": "INFO",
-  "message": "User logged in",
-  "host": "server-1",
-  "request_id": "550e8400-e29b-41d4-a716-446655440000"
-}
-```
 
 ## Development
 
@@ -128,14 +149,15 @@ Configure the application using environment variables (see `.env.example`):
 - `CLICKHOUSE_USER`: ClickHouse username (default: default)
 - `CLICKHOUSE_PASS`: ClickHouse password
 - `LOG_LEVEL`: Logging verbosity (options: debug, info, warn, error, default: info)
-- `HTTP_PORT`: Port for HTTP transport (default: 8080)
+- `HTTP_PORT`: Port for agent HTTP transport (default: 8080)
 - `HTTP_ENDPOINT`: Endpoint path for receiving events (default: /events)
+- `API_PORT`: Port for collector's query API (default: 8081)
 
 ## Transport Layer
 
 Pulse uses a pluggable transport layer architecture that allows for multiple protocols to receive events:
 
-- **HTTP Transport**: Currently implemented, accepts POST requests with JSON event data
+- **HTTP Transport**: Currently implemented, accepts POST requests with JSON event data and GET requests for querying logs
 - **gRPC Transport**: Planned for future implementation
 
 ## Logging
