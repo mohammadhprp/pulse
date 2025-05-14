@@ -151,7 +151,6 @@ Configure the application using environment variables (see `.env.example`):
 - `LOG_LEVEL`: Logging verbosity (options: debug, info, warn, error, default: info)
 - `HTTP_PORT`: Port for agent HTTP transport (default: 8080)
 - `HTTP_ENDPOINT`: Endpoint path for receiving events (default: /events)
-- `API_PORT`: Port for collector's query API (default: 8081)
 
 ## Transport Layer
 
