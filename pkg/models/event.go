@@ -21,3 +21,15 @@ type QueryOptions struct {
 	RequestID   string `json:"request_id"`
 	SearchQuery string `json:"search_query"`
 }
+
+type PaginatedResponse struct {
+	Data        []Event `json:"data"`
+	Total       int64   `json:"total"`
+	PerPage     int     `json:"per_page"`
+	CurrentPage int     `json:"current_page"`
+	LastPage    int     `json:"last_page"`
+	NextPageURL *string `json:"next_page_url"`
+	PrevPageURL *string `json:"prev_page_url"`
+	From        int     `json:"from"`
+	To          int     `json:"to"`
+}
