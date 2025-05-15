@@ -71,9 +71,7 @@ func InsertEvent(ctx context.Context, conn clickhouse.Conn, e models.Event) erro
 }
 
 // QueryEvents retrieves events from ClickHouse with filtering and sorting options
-func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.QueryOptions) ([]models.Event, error) {
-	var events []models.Event
-
+func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.QueryOptions) (*models.PaginatedResponse, error) {
 	var conditions []string
 	var params []interface{}
 
@@ -113,7 +111,30 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 	}
 
 	if options.Limit <= 0 {
-		options.Limit = 100
+		options.Limit = 15
+	}
+	if options.Offset < 0 {
+		options.Offset = 0
+	}
+
+	currentPage := (options.Offset / options.Limit) + 1
+
+	countQuery := "SELECT count(*) FROM gologcentral.logs"
+	if len(conditions) > 0 {
+		countQuery += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	var total int64
+	if err := conn.QueryRow(ctx, countQuery, params...).Scan(&total); err != nil {
+		logger.Error("Failed to get total count", zap.Error(err))
+		return nil, err
+	}
+
+	lastPage := int((total + int64(options.Limit) - 1) / int64(options.Limit))
+	from := options.Offset + 1
+	to := options.Offset + options.Limit
+	if to > int(total) {
+		to = int(total)
 	}
 
 	sortOrder := "ASC"
@@ -122,17 +143,12 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 	}
 
 	query := "SELECT EventTimeMs, Service, Level, Message, Host, RequestID FROM gologcentral.logs"
-
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	query += fmt.Sprintf(" ORDER BY EventTimeMs %s", sortOrder)
-
-	query += fmt.Sprintf(" LIMIT %d", options.Limit)
-	if options.Offset > 0 {
-		query += fmt.Sprintf(" OFFSET %d", options.Offset)
-	}
+	query += fmt.Sprintf(" LIMIT %d OFFSET %d", options.Limit, options.Offset)
 
 	logger.Debug("Executing query",
 		zap.String("query", query),
@@ -147,24 +163,47 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 	}
 	defer rows.Close()
 
+	var events []models.Event
 	for rows.Next() {
 		var event models.Event
 		err := rows.Scan(&event.EventTimeMs, &event.Service, &event.Level, &event.Message, &event.Host, &event.RequestID)
 		if err != nil {
 			logger.Error("Failed to scan row", zap.Error(err))
-			return events, err
+			return nil, err
 		}
 		events = append(events, event)
 	}
 
 	if err := rows.Err(); err != nil {
 		logger.Error("Error during row iteration", zap.Error(err))
-		return events, err
+		return nil, err
+	}
+
+	var nextPageURL, prevPageURL *string
+	if currentPage < lastPage {
+		next := fmt.Sprintf("?page=%d", currentPage+1)
+		nextPageURL = &next
+	}
+	if currentPage > 1 {
+		prev := fmt.Sprintf("?page=%d", currentPage-1)
+		prevPageURL = &prev
+	}
+
+	response := &models.PaginatedResponse{
+		Total:       total,
+		PerPage:     options.Limit,
+		CurrentPage: currentPage,
+		LastPage:    lastPage,
+		NextPageURL: nextPageURL,
+		PrevPageURL: prevPageURL,
+		From:        from,
+		To:          to,
+		Data:        events,
 	}
 
 	logger.Debug("Query completed successfully",
 		zap.Duration("took", time.Since(start)),
 		zap.Int("count", len(events)))
 
-	return events, nil
+	return response, nil
 }
