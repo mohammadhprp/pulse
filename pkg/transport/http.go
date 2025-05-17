@@ -24,13 +24,6 @@ type HTTPTransport struct {
 }
 
 func NewHTTPTransport(port int, endpoint string) *HTTPTransport {
-	if endpoint == "" {
-		endpoint = "/events"
-	}
-	if endpoint[0] != '/' {
-		endpoint = "/" + endpoint
-	}
-
 	return &HTTPTransport{
 		port:     port,
 		endpoint: endpoint,
@@ -46,7 +39,7 @@ func (h *HTTPTransport) SetEventHandler(handler EventHandler) {
 func (h *HTTPTransport) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(h.endpoint, h.handleEvents)
-	mux.HandleFunc("/query", h.handleFilterEvents)
+	mux.HandleFunc(h.endpoint, h.handleFilterEvents)
 
 	addr := fmt.Sprintf(":%d", h.port)
 	h.server = &http.Server{
