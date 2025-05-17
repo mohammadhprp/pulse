@@ -129,17 +129,21 @@ func (h *HTTPTransport) handleFilterEvents(w http.ResponseWriter, r *http.Reques
 	opts.SearchQuery = query.Get("search")
 	opts.SortOrder = query.Get("sort_order")
 
-	if v := query.Get("limit"); v != "" {
-		var limit int
-		if _, err := fmt.Sscanf(v, "%d", &limit); err == nil && limit > 0 {
-			opts.Limit = limit
+	// Default values
+	opts.PerPage = 15
+	opts.Page = 1
+
+	if v := query.Get("per_page"); v != "" {
+		var perPage int
+		if _, err := fmt.Sscanf(v, "%d", &perPage); err == nil && perPage > 0 {
+			opts.PerPage = perPage
 		}
 	}
 
-	if v := query.Get("offset"); v != "" {
-		var offset int
-		if _, err := fmt.Sscanf(v, "%d", &offset); err == nil && offset >= 0 {
-			opts.Offset = offset
+	if v := query.Get("page"); v != "" {
+		var page int
+		if _, err := fmt.Sscanf(v, "%d", &page); err == nil && page > 0 {
+			opts.Page = page
 		}
 	}
 

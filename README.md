@@ -59,7 +59,7 @@ The collector consumes log events from Kafka and stores them in ClickHouse for e
 You can query and filter logs using the HTTP API:
 
 ```bash
-curl -X GET "http://localhost:8080/query?service=my-service&level=INFO&limit=50&offset=0&start_time=1651234567890&end_time=1651334567890&search=logged%20in&sort_order=DESC"
+curl -X GET "http://localhost:8080/events?service=my-service&level=INFO&per_page=50&page=1&start_time=1651234567890&end_time=1651334567890&search=logged%20in&sort_order=DESC"
 ```
 
 Available query parameters:
@@ -69,8 +69,8 @@ Available query parameters:
 - `host`: Filter by hostname
 - `request_id`: Filter by request ID
 - `search`: Search for text in the message field
-- `limit`: Maximum number of results to return (default: 100)
-- `offset`: Results offset for pagination
+- `per_page`: Number of results per page (default: 15)
+- `page`: Page number to retrieve (default: 1)
 - `start_time`: Filter events after this timestamp
 - `end_time`: Filter events before this timestamp
 - `sort_order`: Results order (ASC or DESC, default: ASC)

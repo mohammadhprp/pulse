@@ -110,14 +110,14 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 		params = append(params, "%"+options.SearchQuery+"%")
 	}
 
-	if options.Limit <= 0 {
-		options.Limit = 15
+	if options.PerPage <= 0 {
+		options.PerPage = 15
 	}
-	if options.Offset < 0 {
-		options.Offset = 0
+	if options.Page <= 0 {
+		options.Page = 1
 	}
 
-	currentPage := (options.Offset / options.Limit) + 1
+	offset := (options.Page - 1) * options.PerPage
 
 	countQuery := "SELECT count(*) FROM gologcentral.logs"
 	if len(conditions) > 0 {
@@ -130,9 +130,9 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 		return nil, err
 	}
 
-	lastPage := int((total + int64(options.Limit) - 1) / int64(options.Limit))
-	from := options.Offset + 1
-	to := options.Offset + options.Limit
+	lastPage := int((total + int64(options.PerPage) - 1) / int64(options.PerPage))
+	from := offset + 1
+	to := offset + options.PerPage
 	if to > int(total) {
 		to = int(total)
 	}
@@ -148,7 +148,7 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 	}
 
 	query += fmt.Sprintf(" ORDER BY EventTimeMs %s", sortOrder)
-	query += fmt.Sprintf(" LIMIT %d OFFSET %d", options.Limit, options.Offset)
+	query += fmt.Sprintf(" LIMIT %d OFFSET %d", options.PerPage, offset)
 
 	logger.Debug("Executing query",
 		zap.String("query", query),
@@ -179,23 +179,11 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 		return nil, err
 	}
 
-	var nextPageURL, prevPageURL *string
-	if currentPage < lastPage {
-		next := fmt.Sprintf("?page=%d", currentPage+1)
-		nextPageURL = &next
-	}
-	if currentPage > 1 {
-		prev := fmt.Sprintf("?page=%d", currentPage-1)
-		prevPageURL = &prev
-	}
-
 	response := &models.PaginatedResponse{
 		Total:       total,
-		PerPage:     options.Limit,
-		CurrentPage: currentPage,
+		PerPage:     options.PerPage,
+		CurrentPage: options.Page,
 		LastPage:    lastPage,
-		NextPageURL: nextPageURL,
-		PrevPageURL: prevPageURL,
 		From:        from,
 		To:          to,
 		Data:        events,

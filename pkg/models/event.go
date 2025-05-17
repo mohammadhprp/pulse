@@ -15,8 +15,8 @@ type QueryOptions struct {
 	Host        string `json:"host"`
 	StartTime   uint64 `json:"start_time"`
 	EndTime     uint64 `json:"end_time"`
-	Limit       int    `json:"limit"`
-	Offset      int    `json:"offset"`
+	Page        int    `json:"page"`
+	PerPage     int    `json:"per_page"`
 	SortOrder   string `json:"sort_order"`
 	RequestID   string `json:"request_id"`
 	SearchQuery string `json:"search_query"`
@@ -28,8 +28,6 @@ type PaginatedResponse struct {
 	PerPage     int     `json:"per_page"`
 	CurrentPage int     `json:"current_page"`
 	LastPage    int     `json:"last_page"`
-	NextPageURL *string `json:"next_page_url"`
-	PrevPageURL *string `json:"prev_page_url"`
 	From        int     `json:"from"`
 	To          int     `json:"to"`
 }
