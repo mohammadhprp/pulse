@@ -39,7 +39,7 @@ func (h *HTTPTransport) SetEventHandler(handler EventHandler) {
 func (h *HTTPTransport) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(h.endpoint, h.handleEvents)
-	mux.HandleFunc(h.endpoint, h.handleFilterEvents)
+	mux.HandleFunc(h.endpoint+"/filters", h.handleFilterEvents)
 
 	addr := fmt.Sprintf(":%d", h.port)
 	h.server = &http.Server{

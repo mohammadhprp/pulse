@@ -24,7 +24,7 @@ type QueryOptions struct {
 
 type PaginatedResponse struct {
 	Data        []Event `json:"data"`
-	Total       int64   `json:"total"`
+	Total       uint64  `json:"total"`
 	PerPage     int     `json:"per_page"`
 	CurrentPage int     `json:"current_page"`
 	LastPage    int     `json:"last_page"`

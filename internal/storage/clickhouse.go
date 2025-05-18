@@ -124,13 +124,13 @@ func QueryEvents(ctx context.Context, conn clickhouse.Conn, options models.Query
 		countQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	var total int64
+	var total uint64
 	if err := conn.QueryRow(ctx, countQuery, params...).Scan(&total); err != nil {
 		logger.Error("Failed to get total count", zap.Error(err))
 		return nil, err
 	}
 
-	lastPage := int((total + int64(options.PerPage) - 1) / int64(options.PerPage))
+	lastPage := int((total + uint64(options.PerPage) - 1) / uint64(options.PerPage))
 	from := offset + 1
 	to := offset + options.PerPage
 	if to > int(total) {
